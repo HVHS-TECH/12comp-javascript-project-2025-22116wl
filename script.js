@@ -1,7 +1,7 @@
 var scene;
 
-const canvasSizeX = 500;
 const bulletSpeed = 25;
+const bulletFireRate = 10;
 //canvas size Y is just window height
 
 function preload() {
@@ -9,20 +9,25 @@ function preload() {
 }
 
 function setup() {
-    cnv = new Canvas(windowWidth, windowHeight);
+    cnv = new Canvas('5:7');
 
-    mainGunTurret = new Sprite(windowWidth/2, windowHeight, 120, 20, 'k');
+    mainGunTurret = new Sprite(cnv.width/2, cnv.height, 120, 20, 'k');
     mainGunTurret.color = 'red';
 
-    mainGunBody = new Sprite(windowWidth/2, windowHeight, 150, 'k');
+    mainGunBody = new Sprite(cnv.width/2, cnv.height, 150, 'k');
     mainGunBody.color = 'cyan';
 
     bullets = new Group();
 }
 
 function radToDeg(radian) {
-    return 
+    return radian * (180/Math.PI);
 }
+
+function degToRad(degrees) {
+    return degrees * (Math.PI/180);
+}
+
 
 
 function draw() {
@@ -33,14 +38,15 @@ function draw() {
     
     distance = mainGunTurret.width;
     
-    mainGunTurret.rotation = angleToMouse  * (180/Math.PI);
+    mainGunTurret.rotation = radToDeg(angleToMouse);
     
     mainGunTurret.x = mainGunBody.x + Math.cos(angleToMouse) * distance;
     mainGunTurret.y = mainGunBody.y + Math.sin(angleToMouse) * distance;
 
 
-    if (mouseIsPressed == true) {
+    if (kb.pressing('space') && frameCount%bulletFireRate == 0) {
         spawnBullet();
+        lastFireFrame = frameCount
     }
 
     for (var i = 0; i < bullets.length; i++) {
@@ -57,15 +63,17 @@ function spawnBullet() {
 
     bullet.width = 20;
     bullet.height = 10;
-
+    
     bullet.color = "yellow"
 
-    //spawn at end of gun turret
-    bullet.x = mainGunTurret.x + Math.cos(angleToMouse) * mainGunTurret.width/2;
-    bullet.y = mainGunTurret.y + Math.sin(angleToMouse) * mainGunTurret.width/2;
 
     bullet.rotation = mainGunTurret.rotation;
 
-    bullet.vel.x = Math.cos(angleToMouse) * bulletSpeed;
-    bullet.vel.y = Math.sin(angleToMouse) * bulletSpeed;
+    //spawn at end of gun turret
+    bullet.x = mainGunTurret.x + Math.cos(degToRad(mainGunTurret.rotation)) * mainGunTurret.width/2;
+    bullet.y = mainGunTurret.y + Math.sin(degToRad(mainGunTurret.rotation)) * mainGunTurret.width/2;
+
+
+    bullet.vel.x = Math.cos(degToRad(bullet.rotation)) * bulletSpeed;
+    bullet.vel.y = Math.sin(degToRad(bullet.rotation)) * bulletSpeed;
 }
