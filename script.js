@@ -1,5 +1,5 @@
 var scene = 'menu';
-const bulletSpeed = 25;
+const bulletSpeed = 10;
 const bulletFireRate = 10; //frame gap between fires, lower # = more frequent
 
 function setup() {
@@ -17,6 +17,7 @@ function setup() {
 
     function deleteBullet(alien, bullet) {
 		bullet.remove();
+        console.log('collision!');
         //alien.health 
 	}
 
@@ -89,7 +90,6 @@ function gameScreen() {
 
     if (kb.pressing('space') && frameCount%bulletFireRate == 0) {
         spawnBullet();
-        lastFireFrame = frameCount
     }
 
     for (var i = 0; i < bullets.length; i++) {
@@ -102,8 +102,6 @@ function gameScreen() {
     
     for (var i = 0; i < aliens.length; i++) {
         alien = aliens[i];
-        console.log(alien.startHealth);
-        console.log(alien.health);
 
         if (alien.health <= 0) {
             alien.remove();
@@ -134,7 +132,7 @@ function spawnBullet() {
 }
 
 function spawnAlien() {
-    alien = new Sprite(random(0, cnv.w, -20), -10, 30, 'k');
+    alien = new Sprite(random(0, cnv.w), -10, 30, 'k');
     aliens.add(alien);
 
     alien.vel.y = 2;
