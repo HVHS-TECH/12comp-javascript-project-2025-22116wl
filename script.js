@@ -13,6 +13,14 @@ function setup() {
     mainGunBody.color = 'cyan';
 
     bullets = new Group();
+    aliens = new Group();
+
+    function deleteBullet(alien, bullet) {
+		bullet.remove();
+        //alien.health 
+	}
+
+	bullets.collides(aliens, deleteBullet);
 }
 
 function radToDeg(radian) {
@@ -25,18 +33,18 @@ function degToRad(degrees) {
 
 
 function drawButton(x, y, w, h, buttonFunction, fillColour, borderThickness) {
-
-    //only draw the actual button if a fill colour is passed in
+    //only draw the background if a fill colour is passed in
     if (fillColour != null) {
         fill(fillColour);
         strokeWeight(borderThickness);
         rect(x, y, w, h); // draw button
+        strokeWeight(2);
     }
 
 
     if (mouseIsPressed == true) {
-        //check if mouse is withing bounding box of mouse (x pos minus half width, x pos plus half width etc.)
-        if (mouseX > x-w/2 && mouseX < x +w/2 && mouseY < y+h/2 && mouseY > y-h/2) {
+        //check if mouse is withing bounding box of mouse
+        if (mouseX > x && mouseX < x+w && mouseY > y && mouseY < y+h) {
             //clicked on button
             buttonFunction();
         }
@@ -45,7 +53,7 @@ function drawButton(x, y, w, h, buttonFunction, fillColour, borderThickness) {
 
 
 function draw() {
-    background('#FFFFD1');
+    background('#BBBBBB');
     
     if (scene == 'game') {
         gameScreen();
@@ -59,11 +67,12 @@ function menuScreen() {
 
     drawButton(cnv.hw - 300/2, cnv.hh - 100/2, 300, 100, function() {
         scene = 'game';
-    } '#DDDDDD', 3);
+        spawnAlien();
+    }, '#DDDDDD', 3);
 
     
     fill('#000000');
-    textAlign('center');
+    textAlign(CENTER, CENTER);
     text('Play!', cnv.hw - 300/2, cnv.h/2 - 100/2, 300, 100);
 }
 
@@ -78,7 +87,6 @@ function gameScreen() {
     mainGunTurret.x = mainGunBody.x + Math.cos(angleToMouse) * distance;
     mainGunTurret.y = mainGunBody.y + Math.sin(angleToMouse) * distance;
 
-
     if (kb.pressing('space') && frameCount%bulletFireRate == 0) {
         spawnBullet();
         lastFireFrame = frameCount
@@ -90,11 +98,22 @@ function gameScreen() {
             bullet.remove();
         }
     }
+
+    
+    for (var i = 0; i < aliens.length; i++) {
+        alien = aliens[i];
+        console.log(alien.startHealth);
+        console.log(alien.health);
+
+        if (alien.health <= 0) {
+            alien.remove();
+        }
+    }
 }
 
 
 function spawnBullet() {
-    bullet = new Sprite()
+    bullet = new Sprite(0, 0, 20, 10, 'k');
     bullets.add(bullet);
 
     bullet.width = 20;
@@ -112,4 +131,16 @@ function spawnBullet() {
 
     bullet.vel.x = Math.cos(degToRad(bullet.rotation)) * bulletSpeed;
     bullet.vel.y = Math.sin(degToRad(bullet.rotation)) * bulletSpeed;
+}
+
+function spawnAlien() {
+    alien = new Sprite(random(0, cnv.w, -20), -10, 30, 'k');
+    aliens.add(alien);
+
+    alien.vel.y = 2;
+    
+    alien.startHealth = 100;
+    alien.health = alien.startHealth;
+    
+    console.log('spawn alien');
 }
