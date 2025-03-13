@@ -12,16 +12,14 @@ function setup() {
     mainGunBody = new Sprite(cnv.hw, cnv.h, 150, 'k');
     mainGunBody.color = 'cyan';
 
-    bullets = new Group();
-    aliens = new Group();
+    bulletGroup = new Group()
+    alienGroup = new Group()
 
-    function deleteBullet(alien, bullet) {
-		bullet.remove();
-        console.log('collision!');
-        //alien.health 
-	}
-
-	bullets.collides(aliens, deleteBullet);
+    bulletGroup.collides(alienGroup, function(bullet, alien){
+        bullet.remove();
+        alien.health -= 20;
+        console.log(alien.health);
+    });
 }
 
 function radToDeg(radian) {
@@ -92,32 +90,45 @@ function gameScreen() {
         spawnBullet();
     }
 
-    for (var i = 0; i < bullets.length; i++) {
-        bullet = bullets[i];
+    for (let i = 0; i < bulletGroup.length; i++) {
+        let bullet = bulletGroup[i];
         if (bullet.y < -10 || bullet.x < -10 || bullet.x > cnv.w + 10) {
             bullet.remove();
         }
     }
 
     
-    for (var i = 0; i < aliens.length; i++) {
-        alien = aliens[i];
+    for (let i = 0; i < alienGroup.length; i++) {
+        let alien = alienGroup[i];
 
         if (alien.health <= 0) {
             alien.remove();
         }
+
+
+        //Health bars
+
+        fill(230, 230, 230);
+        rect(alien.x - 20, alien.y + 35, 40, 8);
+
+        fill(0, 255, 0);
+        rect(alien.x - 20, alien.y + 35, alien.health/alien.startHealth * 40, 8);
+    }
+
+    if (frameCount % 300 == 0) {
+        spawnAlien();
     }
 }
 
 
 function spawnBullet() {
-    bullet = new Sprite(0, 0, 20, 10, 'k');
-    bullets.add(bullet);
+    let bullet = new Sprite(0, 0, 20, 10);
+    bulletGroup.add(bullet);
 
     bullet.width = 20;
     bullet.height = 10;
     
-    bullet.color = "yellow"
+    bullet.color = "yellow";
 
 
     bullet.rotation = mainGunTurret.rotation;
@@ -132,13 +143,11 @@ function spawnBullet() {
 }
 
 function spawnAlien() {
-    alien = new Sprite(random(0, cnv.w), -10, 30, 'k');
-    aliens.add(alien);
+    let alien = new Sprite(cnv.hw, -10, 30, 30, "k");
+    alienGroup.add(alien);
 
     alien.vel.y = 2;
     
     alien.startHealth = 100;
     alien.health = alien.startHealth;
-    
-    console.log('spawn alien');
 }
