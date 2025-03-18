@@ -6,6 +6,13 @@ var wave = 1;
 const bulletSpeed = 10;
 const bulletFireRate = 10; //frame gap between fires, lower # = more frequent
 
+
+//wave data
+waveDataDictionary = [
+    {aliens:5, alienFrequency: 2, bossHealth:0, scoreMult: 1},
+    {aliens:10, alienFrequency: 1, bossHealth:20, scoreMult: 1},
+]
+
 function setup() {
     cnv = new Canvas('5:7');
     
@@ -106,7 +113,7 @@ function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, borderTh
 
 
 function draw() {
-    background('#000000');
+    background('#000011');
     
     if (scene == 'game') {
         gameScreen();
@@ -152,6 +159,14 @@ function gameOverScreen() {
     }, '#333333', 3);
 }
 
+
+function startNewWave() {
+    wave ++;
+    remainingAliens
+}
+
+var remainingAliens;
+
 function gameScreen() {
     //Position main gun turret
     angleToMouse = Math.atan2((mouseY-mainGunBody.y), (mouseX - mainGunBody.x));
@@ -194,7 +209,7 @@ function gameScreen() {
         let frequency = 100; // higher is less frequen
         let amplitude = 0.5;
         alien.vel.x = Math.sin((alien.y+alien.yRandomOffset)/frequency) * amplitude;
-
+        
         
         //Health bars
         fill(230, 230, 230);
@@ -207,7 +222,6 @@ function gameScreen() {
         //if distance between bottom of screen and alien is less that threshold then game over
         if ((cnv.h - alien.y) < 50) {
             scene = 'gameOver';
-            console.log('game over!');
 
             if (score > highScore) {
                 highScore = score;
@@ -216,6 +230,7 @@ function gameScreen() {
             //stop aliens
             for (let i = 0; i < alienGroup.length; i++) {
                 alienGroup[i].vel.y = 0;
+                alienGroup[i].vel.x = 0;
             }
         }
     }
