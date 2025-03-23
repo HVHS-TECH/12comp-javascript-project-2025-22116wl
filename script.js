@@ -10,20 +10,31 @@ const bulletFireRate = 10; //frame gap between fires, lower # = more frequent
 //wave data
 waveDataDictionary = [
     {aliens:5, alienFrequency: 1, bossHealth:0, scoreMult: 1},
-    {aliens:10, alienFrequency: 1.5, bossHealth:250, scoreMult: 1},
-    {aliens:10, alienFrequency: 1.6, bossHealth:400, scoreMult: 1.2},
+    {aliens:10, alienFrequency: 1.2, bossHealth:200, scoreMult: 1},
+    {aliens:12, alienFrequency: 1.4, bossHealth:300, scoreMult: 1.2},
     
 ]
 
 function setup() {
     cnv = new Canvas('5:7');
     
-    mainGunTurret = new Sprite(cnv.hw, cnv.h - 120, 120, 20, 'k');
-    mainGunTurret.color = 'red';
-    mainGunTurret.rotation = 90;
+    // main gun
+    mainGunTurret = new Sprite(cnv.hw, cnv.h - 120, 20, 120, 'k');
+    mainGunTurret.color = '#555555';
     
     mainGunBody = new Sprite(cnv.hw, cnv.h, 150, 'k');
-    mainGunBody.color = 'cyan';
+    mainGunBody.color = '#999999';
+
+
+    // left side lazer gun
+    lazerTurret = new Sprite(cnv.w * 0.2, cnv.h - 60, 15, 60, 'k');
+    lazerTurret.color = '#630005';
+
+    lazerBody = new Sprite(cnv.w * 0.2, cnv.h, 80, 'k');
+    lazerBody.color = '#b80009';
+
+
+
     
     bulletGroup = new Group()
     alienGroup = new Group()
@@ -50,11 +61,15 @@ function spawnBullet() {
     bullet.color = "yellow";
 
 
-    bullet.rotation = mainGunTurret.rotation;
+    bullet.rotation = mainGunTurret.rotation - 90;
 
     //spawn at end of gun turret
-    bullet.x = mainGunTurret.x + Math.cos(degToRad(mainGunTurret.rotation)) * mainGunTurret.width/2;
-    bullet.y = mainGunTurret.y + Math.sin(degToRad(mainGunTurret.rotation)) * mainGunTurret.width/2;
+    console.log(mainGunTurret.rotation);
+
+
+
+    bullet.x = mainGunTurret.x + Math.sin(degToRad(mainGunTurret.rotation)) * mainGunTurret.height/2;
+    bullet.y = mainGunTurret.y - Math.cos(degToRad(mainGunTurret.rotation)) * mainGunTurret.height/2;
 
 
     bullet.vel.x = Math.cos(degToRad(bullet.rotation)) * bulletSpeed;
@@ -89,8 +104,6 @@ function spawnAlien(boss) {
 
     //the wave down thing uses the Y pos, offset by this random number different for each alien for randomness
     alien.yRandomOffset = random(-2000, 2000);
-    
-    remainingAliens --;
 }
 
 
@@ -110,8 +123,9 @@ function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, borderTh
     if (fillColour != null) {
         fill(fillColour);
         strokeWeight(borderThickness);
+        stroke("#000000");
+        drawingContext.setLineDash([0, 0]);        
         rect(x - w/2, y - h/2, w, h); // draw button
-        stroke("#FFFFFF");
 
         noStroke();
     }
@@ -135,6 +149,16 @@ function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, borderTh
 function draw() {
     background('#000011');
     
+
+    // draw boundary line
+    stroke('red');
+    strokeWeight(3);
+    drawingContext.setLineDash([5, 10]);
+    const lineHeight = 200;
+    line(0, cnv.h - lineHeight, cnv.w, cnv.h-lineHeight);
+    strokeWeight(0);
+
+
     if (scene == 'game') {
         gameScreen();
     } else if (scene == 'menu') {
@@ -147,6 +171,10 @@ function draw() {
 
 function resetGame() {
     alienGroup.removeAll();
+
+    mainGunTurret.x = cnv.hw;
+    mainGunTurret.y = cnv.h - 120;
+    mainGunTurret.rotation = 0;
 
     wave = 0;
     score = 0;
@@ -183,7 +211,7 @@ function gameOverScreen() {
     }, '#333333', 3);
     
 
-    drawButton(cnv.hw, cnv.hh + 70, 200, 60, "Reutrn to menu", function() {
+    drawButton(cnv.hw, cnv.hh + 70, 200, 60, "Return to menu", function() {
         resetGame();
         scene = 'menu';
     }, '#333333', 3);
@@ -195,39 +223,64 @@ function startNewWave() {
     wave ++;
 
     if (wave > waveDataDictionary.length) {
-        waveData = waveDataDictionary[waveDataDictionary.length - 1] //if no more waves are programmed just repeat last wave
+        waveData = waveDataDictionary[waveDataDictionary.length - 1] // if no more waves are programmed just repeat last wave
     } else {
         waveData = waveDataDictionary[wave - 1]
     }
 
 
     remainingAliens = waveData['aliens'];
-    aliensKilledThisWave = 0;
     
     console.log('wave over');
     
-    interwavePause = true;
-    //create a small pause between waves - white interwavePause == true aliens don't spawn
+    interwavePause = true; // create a small pause between waves
+
     setTimeout(function() {
         interwavePause = false;
         console.log('wave starting!')
+
+        for (var i = 1; i <= waveData['aliens']; i++) {
+            setTimeout(function(count) {
+                if (scene != 'game') { return; } // player has lost before alien spawned
+
+                if ( count == Math.floor(waveData['aliens'] * 0.8) ) {
+                    if (waveData['bossHealth'] > 0) {
+                        spawnAlien(true);
+                    } else {
+                        spawnAlien(); //no boss this wave
+                    }
+                } else {
+                    spawnAlien();
+                }
+    
+    
+            }, 2000/waveData['alienFrequency'] * (random(85, 115) / 100) * i, i)
+        }
+
     }, 3000);
+
+
+}
+
+function getAngle(x1, y1, x2, y2) {
+    return Math.atan2((y2 - y1), (x2 - x1));
 }
 
 var remainingAliens;
-var aliensKilledThisWave = 0;
 
 function gameScreen() {
-    //Position main gun turret
-    angleToMouse = Math.atan2((mouseY-mainGunBody.y), (mouseX - mainGunBody.x));
-        
-    distance = mainGunTurret.width;
+    // Positionez the gun turrets
+    
+    let maingGunToMouse = getAngle(mainGunBody.x, mainGunBody.y, mouseX, mouseY)
+    mainGunTurret.rotation = radToDeg(maingGunToMouse) + 90;
+    mainGunTurret.x = mainGunBody.x + Math.cos(maingGunToMouse) * mainGunTurret.height;
+    mainGunTurret.y = mainGunBody.y + Math.sin(maingGunToMouse) * mainGunTurret.height;
 
-    mainGunTurret.rotation = radToDeg(angleToMouse);
-
-    mainGunTurret.x = mainGunBody.x + Math.cos(angleToMouse) * distance;
-    mainGunTurret.y = mainGunBody.y + Math.sin(angleToMouse) * distance;
-
+    
+    let lazerToMouse = getAngle(lazerBody.x, lazerBody.y, mouseX, mouseY);
+    lazerTurret.rotation = radToDeg(lazerToMouse) + 90;
+    lazerTurret.x = lazerBody.x + Math.cos(lazerToMouse) * lazerTurret.height;
+    lazerTurret.y = lazerBody.y + Math.sin(lazerToMouse) * lazerTurret.height;
 
 
     textSize(20);
@@ -240,9 +293,9 @@ function gameScreen() {
     } else {
         textSize(40);
         text("Wave: " + wave, cnv.hw, cnv.h / 8);
-
+        
         textSize(20);
-        text("Aliens Remaining: " + (waveData['aliens'] - aliensKilledThisWave), cnv.hw, cnv.h / 8 + 100);
+        text("Aliens Remaining: " + remainingAliens, cnv.hw, cnv.h / 8 + 100);
     }
 
     textSize(20);
@@ -250,6 +303,23 @@ function gameScreen() {
 
     if (kb.pressing('space') && frameCount%bulletFireRate == 0) {
         spawnBullet();
+    }
+
+    if (kb.pressing('left')) {
+        let angle = lazerTurret.rotation;
+
+        // get point at tip of lazer turret
+        let startX = lazerTurret.x + Math.sin(degToRad(lazerTurret.rotation)) * lazerTurret.height/2;
+        let startY = lazerTurret.y - Math.cos(degToRad(lazerTurret.rotation)) * lazerTurret.height/2;
+
+
+        let endX = startX + Math.sin(angle) * 9999
+        let endY = startY - Math.cos(angle) * 9999
+
+        stroke('red');
+        strokeWeight(3);
+        line (startX, startY, endX, endY);
+
     }
 
     for (let i = 0; i < bulletGroup.length; i++) {
@@ -265,7 +335,7 @@ function gameScreen() {
 
         if (alien.health <= 0) {
             alien.remove();
-            aliensKilledThisWave ++;
+            remainingAliens --;
         }
 
         //alien x pos wave down
@@ -283,7 +353,7 @@ function gameScreen() {
 
 
         //if distance between bottom of screen and alien is less that threshold then game over
-        if ((cnv.h - alien.y) < 50) {
+        if ((cnv.h - alien.y) < 200) {
             scene = 'gameOver';
 
             if (score > highScore) {
@@ -291,24 +361,9 @@ function gameScreen() {
             }
         }
     }
-    
-    //120 is constant that worked well for alien spawn frequency
-    if (frameCount % Math.ceil(120/waveData['alienFrequency']) == 0 && remainingAliens > 0 && interwavePause == false) {
-        
-        //eight tenths of the way into the wave then spawn the boss
-        if ( waveData['aliens'] - remainingAliens == Math.floor(waveData['aliens'] * 0.8) ) {
-            if (waveData['bossHealth'] > 0) {
-                spawnAlien(true);
-            } else {
-                spawnAlien(); //no boss this wave
-            }
-        } else {
-            spawnAlien();
-        }
 
-    }
 
-    if (remainingAliens <= 0 && alienGroup.length <= 0) {
+    if (remainingAliens <= 0) {
         startNewWave();
     }
 }
