@@ -3,8 +3,11 @@ var score = 0;
 var highScore = 0;
 var wave = 0;
 
-const bulletSpeed = 10;
+const bulletSpeed = 15;
 const bulletFireRate = 10; //frame gap between fires, lower # = more frequent
+
+const sidegunRechargeRate = 0.5;
+const lazerDepletionRate = 2;
 
 
 //wave data
@@ -18,12 +21,18 @@ waveDataDictionary = [
 function setup() {
     cnv = new Canvas('5:7');
     
+
+    world.gravity = 0;
+    guns = new Group();
+
     // main gun
     mainGunTurret = new Sprite(cnv.hw, cnv.h - 120, 20, 120, 'k');
     mainGunTurret.color = '#555555';
     
     mainGunBody = new Sprite(cnv.hw, cnv.h, 150, 'k');
     mainGunBody.color = '#999999';
+    guns.add(mainGunBody);
+    mainGunBody.turret = mainGunTurret;
 
 
     // left side lazer gun
@@ -32,17 +41,35 @@ function setup() {
 
     lazerBody = new Sprite(cnv.w * 0.2, cnv.h, 80, 'k');
     lazerBody.color = '#b80009';
+    lazerBody.energy = 0;
+    guns.add(lazerBody);
+    lazerBody.turret = lazerTurret;
 
+
+
+    // right side canon gun
+    canonTurret = new Sprite(cnv.w * 0.8, cnv.h - 60, 15, 60, 'k');
+    canonTurret.color = '#00c2d4';
+
+    canonBody = new Sprite(cnv.w * 0.8, cnv.h, 80, 'k');
+    canonBody.color = '#008f9c';
+    canonBody.energy = 0;
+    guns.add(canonBody);
+    canonBody.turret = canonTurret;
 
 
     
     bulletGroup = new Group()
     alienGroup = new Group()
-    
+
     bulletGroup.collides(alienGroup, function(bullet, alien){
         bullet.remove();
 
         let damageDealt = 20; // arbitrary constant
+
+        if (bullet.isCanon) {
+            damageDealt = 100; 
+        }
 
         alien.health -= damageDealt;
         score += Math.round(damageDealt / 10 * waveData['scoreMult']);
@@ -51,26 +78,28 @@ function setup() {
 
 
 
-function spawnBullet() {
-    let bullet = new Sprite(0, 0, 20, 10);
+function spawnBullet(turret, canon) {
+    let bullet = new Sprite(0, 0, 20, 10, 'd');
     bulletGroup.add(bullet);
 
-    bullet.width = 20;
-    bullet.height = 10;
-    
-    bullet.color = "yellow";
+    bullet.isCanon = canon
 
+    if (canon) {
+        bullet.width = 30;
+        bullet.height = 20;
+        bullet.color = '#d99f00';
+    } else {
+        bullet.width = 20;
+        bullet.height = 10;
+        bullet.color = "yellow";
+    }
 
-    bullet.rotation = mainGunTurret.rotation - 90;
+    bullet.rotation = turret.rotation - 90;
 
-    //spawn at end of gun turret
-    console.log(mainGunTurret.rotation);
+    // spawn at end of gun turret
 
-
-
-    bullet.x = mainGunTurret.x + Math.sin(degToRad(mainGunTurret.rotation)) * mainGunTurret.height/2;
-    bullet.y = mainGunTurret.y - Math.cos(degToRad(mainGunTurret.rotation)) * mainGunTurret.height/2;
-
+    bullet.x = turret.x + Math.sin(degToRad(turret.rotation)) * turret.height/2;
+    bullet.y = turret.y - Math.cos(degToRad(turret.rotation)) * turret.height/2;
 
     bullet.vel.x = Math.cos(degToRad(bullet.rotation)) * bulletSpeed;
     bullet.vel.y = Math.sin(degToRad(bullet.rotation)) * bulletSpeed;
@@ -82,6 +111,9 @@ function spawnAlien(boss) {
     let padding = 50;
 
     let alien = new Sprite(random(padding, cnv.w - padding), -10, 30, "k");
+    alien.mass = 99999999;
+    console.log(alien);
+    console.log(alien.mass);
 
     if (boss) {
         alien.width = 60;
@@ -148,7 +180,6 @@ function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, borderTh
 
 function draw() {
     background('#000011');
-    
 
     // draw boundary line
     stroke('red');
@@ -175,6 +206,9 @@ function resetGame() {
     mainGunTurret.x = cnv.hw;
     mainGunTurret.y = cnv.h - 120;
     mainGunTurret.rotation = 0;
+
+    lazerBody.energy = 0;
+    canonBody.energy = 0;
 
     wave = 0;
     score = 0;
@@ -230,14 +264,10 @@ function startNewWave() {
 
 
     remainingAliens = waveData['aliens'];
-    
-    console.log('wave over');
-    
     interwavePause = true; // create a small pause between waves
 
     setTimeout(function() {
         interwavePause = false;
-        console.log('wave starting!')
 
         for (var i = 1; i <= waveData['aliens']; i++) {
             setTimeout(function(count) {
@@ -262,25 +292,31 @@ function startNewWave() {
 
 }
 
+function clamp(number, lowerBound, upperBound) {
+    return Math.min(Math.max(number, lowerBound), upperBound);
+}
+
 function getAngle(x1, y1, x2, y2) {
     return Math.atan2((y2 - y1), (x2 - x1));
 }
 
 var remainingAliens;
+const turretRotationBuffer = 1; // in radians
 
 function gameScreen() {
-    // Positionez the gun turrets
-    
-    let maingGunToMouse = getAngle(mainGunBody.x, mainGunBody.y, mouseX, mouseY)
-    mainGunTurret.rotation = radToDeg(maingGunToMouse) + 90;
-    mainGunTurret.x = mainGunBody.x + Math.cos(maingGunToMouse) * mainGunTurret.height;
-    mainGunTurret.y = mainGunBody.y + Math.sin(maingGunToMouse) * mainGunTurret.height;
+    // Rotate and position the gun turrets to point to mouse
+    for (let i = 0; i < guns.length; i++) {
+        let gunBody = guns[i];
+        let turret = gunBody.turret;
 
+        let bodyToMouse = getAngle(gunBody.x, gunBody.y, mouseX, mouseY)
+        bodyToMouse = clamp(bodyToMouse, degToRad(-90) - turretRotationBuffer, degToRad(-90) + turretRotationBuffer); // clamp rotation
     
-    let lazerToMouse = getAngle(lazerBody.x, lazerBody.y, mouseX, mouseY);
-    lazerTurret.rotation = radToDeg(lazerToMouse) + 90;
-    lazerTurret.x = lazerBody.x + Math.cos(lazerToMouse) * lazerTurret.height;
-    lazerTurret.y = lazerBody.y + Math.sin(lazerToMouse) * lazerTurret.height;
+
+        turret.rotation = radToDeg(bodyToMouse) + 90;
+        turret.x = gunBody.x + Math.cos(bodyToMouse) * turret.height;
+        turret.y = gunBody.y + Math.sin(bodyToMouse) * turret.height;
+    }
 
 
     textSize(20);
@@ -301,26 +337,70 @@ function gameScreen() {
     textSize(20);
     text("Score: " + score, cnv.hw, cnv.h / 8 + 50);
 
-    if (kb.pressing('space') && frameCount%bulletFireRate == 0) {
-        spawnBullet();
+    if (kb.pressing('space') && frameCount%bulletFireRate == 0 && interwavePause == false) {
+        spawnBullet(mainGunTurret, false);
     }
 
-    if (kb.pressing('left')) {
-        let angle = lazerTurret.rotation;
-
-        // get point at tip of lazer turret
-        let startX = lazerTurret.x + Math.sin(degToRad(lazerTurret.rotation)) * lazerTurret.height/2;
-        let startY = lazerTurret.y - Math.cos(degToRad(lazerTurret.rotation)) * lazerTurret.height/2;
+    if (kb.pressing('a') && interwavePause == false) {
+        let angle = degToRad(lazerTurret.rotation);
 
 
-        let endX = startX + Math.sin(angle) * 9999
-        let endY = startY - Math.cos(angle) * 9999
+        if (lazerBody.energy > 0) {
+            lazerBody.energy -= lazerDepletionRate;
+        }
 
-        stroke('red');
-        strokeWeight(3);
-        line (startX, startY, endX, endY);
+        // reduce first then check to eliminate the 'sputtering' when holding down A at low energy
 
+        if (lazerBody.energy > 3)  { // small padding (3)
+            
+            // get point at tip of lazer turret
+            
+            let startX = lazerTurret.x + Math.sin(angle) * lazerTurret.height/2;
+            let startY = lazerTurret.y - Math.cos(angle) * lazerTurret.height/2;
+            
+            
+            let endX = startX + Math.sin(angle) * 9999;
+            let endY = startY - Math.cos(angle) * 9999;
+            
+            stroke('red');
+            strokeWeight(3);
+            drawingContext.setLineDash([0, 0]);
+            line (startX, startY, endX, endY);
+            strokeWeight(0);
+            
+            // find out which aliens are within beam
+            
+            for (var i = 0; i < alienGroup.length; i++) {
+                let alien = alienGroup[i];
+                let alienAngle = Math.atan((alien.x - startX)/ (startY - alien.y))
+                
+                // compare angle lazer is pointing, and angle between turret end and alein
+                // make buffer angle small when it's further out
+                
+                let distance = Math.sqrt( ((alien.x - startX) ** 2) + ((startY - alien.y) ** 2) );
+                
+                if (Math.abs(angle - alienAngle) < (alien.width/2000)/(distance/1000)) { // in radians
+                    // alien is in beam path
+                    alien.health -= 1;
+                }
+                
+            }   
+        }
     }
+
+    if (kb.pressed('d') && canonBody.energy > 99 && interwavePause == false) {
+        // launch canon
+        canonBody.energy = 0;
+        spawnBullet(canonTurret, true);
+    }
+
+    lazerBody.energy += sidegunRechargeRate;
+    if (lazerBody.energy > 100) { lazerBody.energy = 100; }
+
+    canonBody.energy += sidegunRechargeRate;
+    if (canonBody.energy > 100) { canonBody.energy = 100; }
+
+
 
     for (let i = 0; i < bulletGroup.length; i++) {
         let bullet = bulletGroup[i];
@@ -361,6 +441,22 @@ function gameScreen() {
             }
         }
     }
+
+
+    // lazer energy
+    fill(230, 230, 230);
+    rect(lazerBody.x - 5, lazerBody.y - 100, 10, 40);
+
+    fill(0, 255, 0);
+    rect(lazerBody.x - 5, lazerBody.y - 100, 10, (lazerBody.energy/100) * 40);
+
+
+    // canon energy
+    fill(230, 230, 230);
+    rect(canonBody.x - 5, canonBody.y - 100, 10, 40);
+
+    fill(0, 255, 0);
+    rect(canonBody.x - 5, canonBody.y - 100, 10, (canonBody.energy/100) * 40);
 
 
     if (remainingAliens <= 0) {
