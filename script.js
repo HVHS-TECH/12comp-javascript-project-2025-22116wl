@@ -12,10 +12,11 @@ const lazerDepletionRate = 2;
 
 //wave data
 waveDataDictionary = [
-    {aliens:5, alienFrequency: 1, bossHealth:0, scoreMult: 1},
-    {aliens:10, alienFrequency: 1.2, bossHealth:200, scoreMult: 1},
-    {aliens:12, alienFrequency: 1.4, bossHealth:300, scoreMult: 1.2},
-    
+    {aliens:8, alienFrequency: 2, alienBuff: 1.5, bossHealth:700, scoreMult: 2}, // cool wave not many but very strong aliens
+    {aliens:5, alienFrequency: 1, alienBuff: 0.8, bossHealth:0, scoreMult: 1},
+    {aliens:10, alienFrequency: 1.2, alienBuff: 1, bossHealth:200, scoreMult: 1},
+    {aliens:12, alienFrequency: 1.4, alienBuff: 1.2, bossHealth:400, scoreMult: 1.2},
+    {aliens:20, alienFrequency: 1.1, alienBuff: 1, bossHealth:500, scoreMult: 1.3},
 ]
 
 function setup() {
@@ -49,10 +50,10 @@ function setup() {
 
     // right side canon gun
     canonTurret = new Sprite(cnv.w * 0.8, cnv.h - 60, 15, 60, 'k');
-    canonTurret.color = '#00c2d4';
+    canonTurret.color = '#008f9c';
 
     canonBody = new Sprite(cnv.w * 0.8, cnv.h, 80, 'k');
-    canonBody.color = '#008f9c';
+    canonBody.color = '#00c2d4';
     canonBody.energy = 0;
     guns.add(canonBody);
     canonBody.turret = canonTurret;
@@ -111,22 +112,20 @@ function spawnAlien(boss) {
     let padding = 50;
 
     let alien = new Sprite(random(padding, cnv.w - padding), -10, 30, "k");
-    alien.mass = 99999999;
-    console.log(alien);
-    console.log(alien.mass);
 
     if (boss) {
         alien.width = 60;
-
         alien.startHealth = waveData['bossHealth'];
     } else {
         alien.width = 30;
         alien.height = 30;
 
-        alien.startHealth = Math.round(100 * (random(50, 150)/100)); //little bit of randomness
+        alien.startHealth = 100; // 100 is base health
+        alien.startHealth *= waveData['alienBuff']; // wave buff
+        alien.startHealth *= (random(50, 150)/100); // add healthy dose of randomness
+
+        alien.startHealth = Math.round(alien.startHealth); // round it out to finalise starting health
     }
-
-
 
     alienGroup.add(alien);
 
@@ -150,8 +149,11 @@ function degToRad(degrees) {
 }
 
 
+// draw a button in p5 with various parameters 
+// buttonFunction = code ran when button clicked, no parameters no return
 function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, borderThickness) {
-    //only draw the background if a fill colour is passed in
+
+    // only draw the background if a fill colour is passed in
     if (fillColour != null) {
         fill(fillColour);
         strokeWeight(borderThickness);
@@ -164,9 +166,9 @@ function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, borderTh
 
 
     if (mouseIsPressed == true) {
-        //check if mouse is withing bounding box of mouse
+        // check if mouse is within bounding box of mouse
         if (mouseX > x-w/2 && mouseX < x+w/2 && mouseY > y - h/2 && mouseY < y + h/2) {
-            //clicked on button
+            // clicked on button
             buttonFunction();
         }
     }
@@ -176,6 +178,7 @@ function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, borderTh
     textAlign(CENTER, CENTER);
     text(buttonText, x, y);
 }
+
 
 
 function draw() {
@@ -203,13 +206,25 @@ function draw() {
 function resetGame() {
     alienGroup.removeAll();
 
+    // reset positon and rotation of gun turrets
     mainGunTurret.x = cnv.hw;
     mainGunTurret.y = cnv.h - 120;
     mainGunTurret.rotation = 0;
 
+    lazerTurret.x = cnv.w * 0.2;
+    lazerTurret.y = cnv.h - 60;
+    lazerTurret.rotation = 0;
+
+    canonTurret.x = cnv.w * 0.8;
+    canonTurret.y = cnv.h - 60;
+    canonTurret.rotation = 0;
+
+
+    // reset side gun gun energy levels
     lazerBody.energy = 0;
     canonBody.energy = 0;
 
+    // reset basic data
     wave = 0;
     score = 0;
 }
@@ -230,7 +245,7 @@ function gameOverScreen() {
     textSize(30);
     text('Score: ' + score, cnv.hw, cnv.h / 4);
     textSize(15);
-    text('High Score: ' + highScore, cnv.hw, cnv.h / 4 + 50);    
+    text('High Score: ' + highScore, cnv.hw, cnv.h / 4 + 50);
 
 
     for (let i = 0; i < alienGroup.length; i++) {
@@ -251,15 +266,16 @@ function gameOverScreen() {
     }, '#333333', 3);
 }
 
-var waveData
+var waveData;
+var remainingAliens;
 
 function startNewWave() {
     wave ++;
 
     if (wave > waveDataDictionary.length) {
-        waveData = waveDataDictionary[waveDataDictionary.length - 1] // if no more waves are programmed just repeat last wave
+        waveData = waveDataDictionary[waveDataDictionary.length - 1]; // if no more waves are programmed just repeat last wave
     } else {
-        waveData = waveDataDictionary[wave - 1]
+        waveData = waveDataDictionary[wave - 1];
     }
 
 
@@ -277,7 +293,7 @@ function startNewWave() {
                     if (waveData['bossHealth'] > 0) {
                         spawnAlien(true);
                     } else {
-                        spawnAlien(); //no boss this wave
+                        spawnAlien(); // no boss this wave
                     }
                 } else {
                     spawnAlien();
@@ -300,8 +316,8 @@ function getAngle(x1, y1, x2, y2) {
     return Math.atan2((y2 - y1), (x2 - x1));
 }
 
-var remainingAliens;
 const turretRotationBuffer = 1; // in radians
+
 
 function gameScreen() {
     // Rotate and position the gun turrets to point to mouse
@@ -418,13 +434,13 @@ function gameScreen() {
             remainingAliens --;
         }
 
-        //alien x pos wave down
-        let frequency = 100; // higher is less frequen
+        // alien x pos wave down
+        let frequency = 100; // higher is less frequent
         let amplitude = 0.8;
         alien.vel.x = Math.sin((alien.y+alien.yRandomOffset)/frequency) * amplitude;
         
         
-        //Health bars
+        // Alien health bars
         fill(230, 230, 230);
         rect(alien.x - 20, alien.y + alien.width + 5, 40, 8);
 
@@ -432,7 +448,7 @@ function gameScreen() {
         rect(alien.x - 20, alien.y + alien.width + 5, alien.health/alien.startHealth * 40, 8);
 
 
-        //if distance between bottom of screen and alien is less that threshold then game over
+        // if distance between bottom of screen and alien is less that threshold (200px) then game over
         if ((cnv.h - alien.y) < 200) {
             scene = 'gameOver';
 
@@ -443,21 +459,23 @@ function gameScreen() {
     }
 
 
-    // lazer energy
+    // lazer energy bar
     fill(230, 230, 230);
     rect(lazerBody.x - 5, lazerBody.y - 100, 10, 40);
 
     fill(0, 255, 0);
-    rect(lazerBody.x - 5, lazerBody.y - 100, 10, (lazerBody.energy/100) * 40);
+    let barHeight = (lazerBody.energy/100) * 40  // y pos is inverted so health bar is anchored at top
+    rect(lazerBody.x - 5, lazerBody.y - 60 - barHeight, 10, barHeight);
 
 
-    // canon energy
+    // canon energy bar
     fill(230, 230, 230);
     rect(canonBody.x - 5, canonBody.y - 100, 10, 40);
 
     fill(0, 255, 0);
-    rect(canonBody.x - 5, canonBody.y - 100, 10, (canonBody.energy/100) * 40);
-
+    barHeight = (canonBody.energy/100) * 40  // y pos is inverted so health bar is anchored at top
+    rect(canonBody.x - 5, canonBody.y - 60 - barHeight, 10, barHeight);
+    
 
     if (remainingAliens <= 0) {
         startNewWave();
