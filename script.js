@@ -12,11 +12,11 @@ const lazerDepletionRate = 2;
 
 //wave data
 waveDataDictionary = [
-    {aliens:8, alienFrequency: 2, alienBuff: 1.5, bossHealth:700, scoreMult: 2}, // cool wave not many but very strong aliens
     {aliens:5, alienFrequency: 1, alienBuff: 0.8, bossHealth:0, scoreMult: 1},
     {aliens:10, alienFrequency: 1.2, alienBuff: 1, bossHealth:200, scoreMult: 1},
-    {aliens:12, alienFrequency: 1.4, alienBuff: 1.2, bossHealth:400, scoreMult: 1.2},
-    {aliens:20, alienFrequency: 1.1, alienBuff: 1, bossHealth:500, scoreMult: 1.3},
+    {aliens:10, alienFrequency: 1.4, alienBuff: 1.2, bossHealth:400, scoreMult: 1.2},
+    {aliens:20, alienFrequency: 1.3, alienBuff: 0.9, bossHealth:300, scoreMult: 1}, // loads of weak aliens
+    {aliens:8, alienFrequency: 2, alienBuff: 1.4, bossHealth:600, scoreMult: 2}, // few but very strong aliens
 ]
 
 function setup() {
@@ -273,7 +273,7 @@ function startNewWave() {
     wave ++;
 
     if (wave > waveDataDictionary.length) {
-        waveData = waveDataDictionary[waveDataDictionary.length - 1]; // if no more waves are programmed just repeat last wave
+        waveData = waveDataDictionary[ Math.floor(random(1, waveDataDictionary.length)) ]; // if no more waves are programmed just repeat ramdom previous wave
     } else {
         waveData = waveDataDictionary[wave - 1];
     }
