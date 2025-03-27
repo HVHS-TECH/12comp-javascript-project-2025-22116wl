@@ -252,6 +252,21 @@ function menuScreen() {
         scene = 'game';
         startNewWave();
     }, '#333333', '#222222', 3);
+
+
+
+    textAlign(CENTER);
+    fill('#FFFFFF');
+    textSize(40);
+
+    strokeWeight(0);
+    text('Controls', cnv.hw, 80);
+    textSize(20);
+    text('Main Gun (Center): Hold Space', cnv.hw, 140);
+    text('Lazer (Left): Hold A', cnv.hw, 170);
+    text('Canon (Right): D', cnv.hw, 200);
+
+    text('Aim: Cursor', cnv.hw, 250);
 }
 
 function gameOverScreen() {
