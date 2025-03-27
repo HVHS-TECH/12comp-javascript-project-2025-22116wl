@@ -12,11 +12,12 @@ const lazerDepletionRate = 2;
 
 //wave data
 waveDataDictionary = [
-    {aliens:5, alienFrequency: 1, alienBuff: 0.8, bossHealth:0, scoreMult: 1},
+    {aliens:5, alienFrequency: 1, alienBuff: 0.8, bossHealth:0, scoreMult: 0.8}, //introductory easy wave
     {aliens:10, alienFrequency: 1.2, alienBuff: 1, bossHealth:200, scoreMult: 1},
-    {aliens:10, alienFrequency: 1.4, alienBuff: 1.2, bossHealth:400, scoreMult: 1.2},
-    {aliens:20, alienFrequency: 1.3, alienBuff: 0.9, bossHealth:300, scoreMult: 1}, // loads of weak aliens
-    {aliens:8, alienFrequency: 2, alienBuff: 1.4, bossHealth:600, scoreMult: 2}, // few but very strong aliens
+    {aliens:12, alienFrequency: 1.1, alienBuff: 1.1, bossHealth:400, scoreMult: 1.2},
+    {aliens:20, alienFrequency: 1.5, alienBuff: 0.9, bossHealth:0, scoreMult: 1}, // loads of weak aliens
+    {aliens:6, alienFrequency: 1.5, alienBuff: 1.3, bossHealth:500, scoreMult: 2}, // few but very strong aliens
+    {aliens:10, alienFrequency: 1, alienBuff: 1, bossHealth:1000, scoreMult: 1.3}, // very strong boss
 ]
 
 function setup() {
@@ -138,6 +139,18 @@ function spawnAlien(boss) {
 }
 
 
+// found this code online  https://editor.p5js.org/Kubi/sketches/IJp2TXHNJ
+function hexToRgb(hex) {
+    hex = hex.replace('#', '');
+
+    var bigint = parseInt(hex, 16);
+
+    var r = (bigint >> 16) & 255;
+    var g = (bigint >> 8) & 255;
+    var b = bigint & 255;
+
+    return color(r, g, b);
+}
 
 
 function radToDeg(radian) {
@@ -151,34 +164,35 @@ function degToRad(degrees) {
 
 // draw a button in p5 with various parameters 
 // buttonFunction = code ran when button clicked, no parameters no return
-function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, borderThickness) {
-
+function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, hoverColour, borderThickness) {
     // only draw the background if a fill colour is passed in
     if (fillColour != null) {
         fill(fillColour);
         strokeWeight(borderThickness);
         stroke("#000000");
         drawingContext.setLineDash([0, 0]);        
-        rect(x - w/2, y - h/2, w, h); // draw button
-
+        
         noStroke();
     }
-
-
-    if (mouseIsPressed == true) {
+    
+    if (mouseX > x-w/2 && mouseX < x+w/2 && mouseY > y - h/2 && mouseY < y + h/2) {
         // check if mouse is within bounding box of mouse
-        if (mouseX > x-w/2 && mouseX < x+w/2 && mouseY > y - h/2 && mouseY < y + h/2) {
+        fill(hoverColour);
+        
+        if (mouseIsPressed == true) {
             // clicked on button
             buttonFunction();
         }
     }
+    
+    rect(x - w/2, y - h/2, w, h); // draw button
+
 
     textSize(w/8);
     fill('#FFFFFF');
     textAlign(CENTER, CENTER);
     text(buttonText, x, y);
 }
-
 
 
 function draw() {
@@ -237,7 +251,7 @@ function menuScreen() {
     drawButton(cnv.hw, cnv.hh, 300, 100, "Play", function() {
         scene = 'game';
         startNewWave();
-    }, '#333333', 3);
+    }, '#333333', '#222222', 3);
 }
 
 function gameOverScreen() {
@@ -257,13 +271,13 @@ function gameOverScreen() {
         resetGame();
         scene = 'game';
         startNewWave();
-    }, '#333333', 3);
+    }, '#333333', '#222222', 3);
     
 
     drawButton(cnv.hw, cnv.hh + 70, 200, 60, "Return to menu", function() {
         resetGame();
         scene = 'menu';
-    }, '#333333', 3);
+    }, '#333333', '#222222', 3);
 }
 
 var waveData;
