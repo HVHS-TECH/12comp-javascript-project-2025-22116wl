@@ -253,8 +253,7 @@ function menuScreen() {
         startNewWave();
     }, '#333333', '#222222', 3);
 
-
-
+    
     textAlign(CENTER);
     fill('#FFFFFF');
     textSize(40);
