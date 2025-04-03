@@ -206,6 +206,14 @@ function draw() {
     strokeWeight(0);
 
 
+    if (kb.pressing('e') && kb.pressing('a') && kb.pressing('s') && kb.pressing('t') && kb.pressing('r')) {
+        textSize(10);
+        textAlign(LEFT);
+        fill('#00FF00');
+        text('congrats you found an easter egg send me an email and i will give you a present', 20, 20)
+    }
+
+
     if (scene == 'game') {
         gameScreen();
     } else if (scene == 'menu') {
@@ -268,7 +276,8 @@ function controlsScreen() {
 
 function menuScreen() {
     textSize(50);
-
+    textAlign(CENTER);
+    fill('#FFFFFF');
     text('my game i made', cnv.hw, 200)
 
     drawButton(cnv.hw, cnv.hh - 100, 300, 100, "Play", function() {
