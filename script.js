@@ -9,7 +9,6 @@ const bulletFireRate = 10; //frame gap between fires, lower # = more frequent
 const sidegunRechargeRate = 0.5;
 const lazerDepletionRate = 2;
 
-
 //wave data
 waveDataDictionary = [
     {aliens:5, alienFrequency: 1, alienBuff: 0.8, bossHealth:0, scoreMult: 0.8}, //introductory easy wave
@@ -213,6 +212,8 @@ function draw() {
         menuScreen();
     } else if (scene == 'gameOver') {
         gameOverScreen();
+    } else if (scene == 'controls') {
+        controlsScreen();
     }
 }
 
@@ -245,27 +246,42 @@ function resetGame() {
 
 var interwavePause = false;
 
+function controlsScreen() {
+    textAlign(CENTER);
+    fill('#FFFFFF');
+    textSize(60);
+    
+    strokeWeight(0);
+    text('Controls', cnv.hw, 200);
+    textSize(20);
+    text('Main Gun (Center): Hold Space', cnv.hw, cnv.hh - 150);
+    text('Lazer (Left): Hold A', cnv.hw, cnv.hh - 100);
+    text('Canon (Right): D', cnv.hw, cnv.hh - 50 );
+    
+    text('Aim: Cursor', cnv.hw, cnv.hh + 20);
+
+
+    drawButton(cnv.hw, cnv.h-350, 220, 80, "Return", function() {
+        scene = 'menu';
+    }, '#333333', '#222222', 3);
+}
+
 function menuScreen() {
     textSize(50);
 
-    drawButton(cnv.hw, cnv.hh, 300, 100, "Play", function() {
+    text('my game i made', cnv.hw, 200)
+
+    drawButton(cnv.hw, cnv.hh - 100, 300, 100, "Play", function() {
         scene = 'game';
         startNewWave();
     }, '#333333', '#222222', 3);
 
+
+    drawButton(cnv.hw, cnv.hh, 250, 80, "Controls", function() {
+        scene = 'controls';
+    }, '#333333', '#222222', 3);
+
     
-    textAlign(CENTER);
-    fill('#FFFFFF');
-    textSize(40);
-
-    strokeWeight(0);
-    text('Controls', cnv.hw, 80);
-    textSize(20);
-    text('Main Gun (Center): Hold Space', cnv.hw, 140);
-    text('Lazer (Left): Hold A', cnv.hw, 170);
-    text('Canon (Right): D', cnv.hw, 200);
-
-    text('Aim: Cursor', cnv.hw, 250);
 }
 
 function gameOverScreen() {
@@ -298,7 +314,7 @@ var waveData;
 var remainingAliens;
 
 function startNewWave() {
-    wave ++;
+    wave++;
 
     if (wave > waveDataDictionary.length) {
         waveData = waveDataDictionary[ Math.floor(random(1, waveDataDictionary.length)) ]; // if no more waves are programmed just repeat ramdom previous wave
@@ -309,10 +325,10 @@ function startNewWave() {
 
     remainingAliens = waveData['aliens'];
     interwavePause = true; // create a small pause between waves
-
+    
     setTimeout(function() {
         interwavePause = false;
-
+        
         for (var i = 1; i <= waveData['aliens']; i++) {
             setTimeout(function(count) {
                 if (scene != 'game') { return; } // player has lost before alien spawned
