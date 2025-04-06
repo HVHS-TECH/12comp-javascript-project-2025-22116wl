@@ -2,6 +2,7 @@ var scene = 'menu';
 var score = 0;
 var highScore = 0;
 var wave = 0;
+var gameAttempt = 0;
 
 const bulletSpeed = 15;
 const bulletFireRate = 10; //frame gap between fires, lower # = more frequent
@@ -278,7 +279,10 @@ function menuScreen() {
     textSize(50);
     textAlign(CENTER);
     fill('#FFFFFF');
-    text('my game i made', cnv.hw, 200)
+    text('my game i made', cnv.hw, 180)
+    textSize(20);
+    text('High Score: ' + highScore, cnv.hw, 240)
+
 
     drawButton(cnv.hw, cnv.hh - 100, 300, 100, "Play", function() {
         scene = 'game';
@@ -324,7 +328,8 @@ var remainingAliens;
 
 function startNewWave() {
     wave++;
-
+    if (wave == 1) { gameAttempt ++; } // if starting first wave in game then increase attempt
+    
     if (wave > waveDataDictionary.length) {
         waveData = waveDataDictionary[ Math.floor(random(1, waveDataDictionary.length)) ]; // if no more waves are programmed just repeat ramdom previous wave
     } else {
@@ -335,12 +340,16 @@ function startNewWave() {
     remainingAliens = waveData['aliens'];
     interwavePause = true; // create a small pause between waves
     
+    var currentGame = gameAttempt //this is so if new game is started it can detect that new game has started and not spawn aliens from last game
+
     setTimeout(function() {
+        if (scene != 'game' || gameAttempt != currentGame ) { return; } // game over or new game started before pause ended
         interwavePause = false;
         
         for (var i = 1; i <= waveData['aliens']; i++) {
             setTimeout(function(count) {
-                if (scene != 'game') { return; } // player has lost before alien spawned
+
+                if (scene != 'game' || gameAttempt != currentGame ) { return; } // game over or new game started before alien spawned
 
                 if ( count == Math.floor(waveData['aliens'] * 0.8) ) {
                     if (waveData['bossHealth'] > 0) {
@@ -405,6 +414,12 @@ function gameScreen() {
 
     textSize(20);
     text("Score: " + score, cnv.hw, cnv.h / 8 + 50);
+
+    drawButton(60, 25, 100, 30, "Return To Menu", function() {
+        if (score > highScore) { highScore = score; }
+        resetGame();
+        scene = 'menu';
+    }, '#333333', '#222222', 3)
 
     if (kb.pressing('space') && frameCount%bulletFireRate == 0 && interwavePause == false) {
         spawnBullet(mainGunTurret, false);
