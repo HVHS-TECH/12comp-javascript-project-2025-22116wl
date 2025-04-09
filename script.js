@@ -74,7 +74,9 @@ function setup() {
         }
 
         alien.health -= damageDealt;
-        score += Math.round(damageDealt / 10 * waveData['scoreMult']);
+        if (scene == 'game') { // don't add score for bullets that collided after game ended
+            score += Math.round(damageDealt / 10 * waveData['scoreMult']);
+        }
     });
 }
 
@@ -230,6 +232,7 @@ function draw() {
 
 function resetGame() {
     alienGroup.removeAll();
+    bulletGroup.removeAll();
 
     // reset positon and rotation of gun turrets
     mainGunTurret.x = cnv.hw;
