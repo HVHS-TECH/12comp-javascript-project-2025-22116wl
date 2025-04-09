@@ -2,7 +2,7 @@ var scene = 'menu';
 var score = 0;
 var highScore = 0;
 var wave = 0;
-var gameAttempt = 0;
+var gameAttempt = 0; //used on backend to differentiate different games to the alien spawn loop
 
 const bulletSpeed = 15;
 const bulletFireRate = 10; //frame gap between fires, lower # = more frequent
@@ -17,7 +17,7 @@ waveDataDictionary = [
     {aliens:12, alienFrequency: 1.1, alienBuff: 1.1, bossHealth:400, scoreMult: 1.2},
     {aliens:20, alienFrequency: 1.5, alienBuff: 0.9, bossHealth:0, scoreMult: 1}, // loads of weak aliens
     {aliens:6, alienFrequency: 1.5, alienBuff: 1.3, bossHealth:500, scoreMult: 2}, // few but very strong aliens
-    {aliens:10, alienFrequency: 1, alienBuff: 1, bossHealth:1000, scoreMult: 1.3}, // very strong boss
+    {aliens:10, alienFrequency: 1, alienBuff: 1, bossHealth:800, scoreMult: 1.3}, // very strong boss
 ]
 
 function setup() {
@@ -149,9 +149,8 @@ function hexToRgb(hex) {
     var g = (bigint >> 8) & 255;
     var b = bigint & 255;
 
-    return color(r, g, b);
+    return [r, g, b];
 }
-
 
 function radToDeg(radian) {
     return radian * (180/Math.PI);
@@ -177,7 +176,9 @@ function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, hoverCol
     
     if (mouseX > x-w/2 && mouseX < x+w/2 && mouseY > y - h/2 && mouseY < y + h/2) {
         // check if mouse is within bounding box of mouse
-        fill(hoverColour);
+        let mainColour = hexToRgb(fillColour);
+        const hoverBrightnessFactor = 0.7;
+        fill(mainColour[0]*hoverBrightnessFactor, mainColour[1]*hoverBrightnessFactor, mainColour[2]*hoverBrightnessFactor); //darken the fill colour by certain amount
         
         if (mouseIsPressed == true) {
             // clicked on button
@@ -272,14 +273,14 @@ function controlsScreen() {
 
     drawButton(cnv.hw, cnv.h-350, 220, 80, "Return", function() {
         scene = 'menu';
-    }, '#333333', '#222222', 3);
+    }, '#333333', 3);
 }
 
 function menuScreen() {
     textSize(50);
     textAlign(CENTER);
     fill('#FFFFFF');
-    text('my game i made', cnv.hw, 180)
+    text('alienn r bad simul8r', cnv.hw, 180)
     textSize(20);
     text('High Score: ' + highScore, cnv.hw, 240)
 
@@ -287,12 +288,12 @@ function menuScreen() {
     drawButton(cnv.hw, cnv.hh - 100, 300, 100, "Play", function() {
         scene = 'game';
         startNewWave();
-    }, '#333333', '#222222', 3);
+    }, '#333333', 3);
 
 
     drawButton(cnv.hw, cnv.hh, 250, 80, "Controls", function() {
         scene = 'controls';
-    }, '#333333', '#222222', 3);
+    }, '#333333', 3);
 
     
 }
@@ -314,13 +315,13 @@ function gameOverScreen() {
         resetGame();
         scene = 'game';
         startNewWave();
-    }, '#333333', '#222222', 3);
+    }, '#333333', 3);
     
 
     drawButton(cnv.hw, cnv.hh + 70, 200, 60, "Return to menu", function() {
         resetGame();
         scene = 'menu';
-    }, '#333333', '#222222', 3);
+    }, '#333333', 3);
 }
 
 var waveData;
@@ -419,7 +420,7 @@ function gameScreen() {
         if (score > highScore) { highScore = score; }
         resetGame();
         scene = 'menu';
-    }, '#333333', '#222222', 3)
+    }, '#333333', 3)
 
     if (kb.pressing('space') && frameCount%bulletFireRate == 0 && interwavePause == false) {
         spawnBullet(mainGunTurret, false);
@@ -485,7 +486,7 @@ function gameScreen() {
     if (canonBody.energy > 100) { canonBody.energy = 100; }
 
 
-
+    // remove off screen bullets
     for (let i = 0; i < bulletGroup.length; i++) {
         let bullet = bulletGroup[i];
         if (bullet.y < -10 || bullet.x < -10 || bullet.x > cnv.w + 10) {
