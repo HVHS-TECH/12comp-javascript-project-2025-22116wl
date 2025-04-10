@@ -4,14 +4,14 @@ var highScore = 0;
 var wave = 0;
 var gameAttempt = 0; //used on backend to differentiate different games to the alien spawn loop
 
-const bulletSpeed = 15;
-const bulletFireRate = 10; //frame gap between fires, lower # = more frequent
+const BULLET_SPEED = 15;
+const BULLET_FIRE_RATE = 10; //frame gap between fires, lower # = more frequent
 
-const sidegunRechargeRate = 0.5;
-const lazerDepletionRate = 2;
+const SIDEGUN_RECHARGE_RATE = 0.5;
+const LAZER_DEPLETION_RATE = 2;
 
 //wave data
-waveDataDictionary = [
+const WAVE_DATA_DICTIONARY = [
     {aliens:5, alienFrequency: 1, alienBuff: 0.8, bossHealth:0, scoreMult: 0.8}, //introductory easy wave
     {aliens:10, alienFrequency: 1.2, alienBuff: 1, bossHealth:200, scoreMult: 1},
     {aliens:12, alienFrequency: 1.1, alienBuff: 1.1, bossHealth:400, scoreMult: 1.2},
@@ -105,8 +105,8 @@ function spawnBullet(turret, canon) {
     bullet.x = turret.x + Math.sin(degToRad(turret.rotation)) * turret.height/2;
     bullet.y = turret.y - Math.cos(degToRad(turret.rotation)) * turret.height/2;
 
-    bullet.vel.x = Math.cos(degToRad(bullet.rotation)) * bulletSpeed;
-    bullet.vel.y = Math.sin(degToRad(bullet.rotation)) * bulletSpeed;
+    bullet.vel.x = Math.cos(degToRad(bullet.rotation)) * BULLET_SPEED;
+    bullet.vel.y = Math.sin(degToRad(bullet.rotation)) * BULLET_SPEED;
 }
 
 function spawnAlien(boss) {
@@ -179,8 +179,8 @@ function drawButton(x, y, w, h, buttonText, buttonFunction, fillColour, hoverCol
     if (mouseX > x-w/2 && mouseX < x+w/2 && mouseY > y - h/2 && mouseY < y + h/2) {
         // check if mouse is within bounding box of mouse
         let mainColour = hexToRgb(fillColour);
-        const hoverBrightnessFactor = 0.7;
-        fill(mainColour[0]*hoverBrightnessFactor, mainColour[1]*hoverBrightnessFactor, mainColour[2]*hoverBrightnessFactor); //darken the fill colour by certain amount
+        const HOVER_BRIGHTNESS_FACTOR = 0.7;
+        fill(mainColour[0]*HOVER_BRIGHTNESS_FACTOR, mainColour[1]*HOVER_BRIGHTNESS_FACTOR, mainColour[2]*HOVER_BRIGHTNESS_FACTOR); //darken the fill colour by certain amount
         
         if (mouseIsPressed == true) {
             // clicked on button
@@ -205,8 +205,8 @@ function draw() {
     stroke('red');
     strokeWeight(3);
     drawingContext.setLineDash([5, 10]);
-    const lineHeight = 200;
-    line(0, cnv.h - lineHeight, cnv.w, cnv.h-lineHeight);
+    const LINE_HEIGHT = 200;
+    line(0, cnv.h - LINE_HEIGHT, cnv.w, cnv.h-LINE_HEIGHT);
     strokeWeight(0);
 
 
@@ -334,10 +334,10 @@ function startNewWave() {
     wave++;
     if (wave == 1) { gameAttempt ++; } // if starting first wave in game then increase attempt
     
-    if (wave > waveDataDictionary.length) {
-        waveData = waveDataDictionary[ Math.floor(random(1, waveDataDictionary.length)) ]; // if no more waves are programmed just repeat ramdom previous wave
+    if (wave > WAVE_DATA_DICTIONARY.length) {
+        waveData = WAVE_DATA_DICTIONARY[ Math.floor(random(1, WAVE_DATA_DICTIONARY.length)) ]; // if no more waves are programmed just repeat ramdom previous wave
     } else {
-        waveData = waveDataDictionary[wave - 1];
+        waveData = WAVE_DATA_DICTIONARY[wave - 1];
     }
 
 
@@ -382,8 +382,7 @@ function getAngle(x1, y1, x2, y2) {
     return Math.atan2((y2 - y1), (x2 - x1));
 }
 
-const turretRotationBuffer = 1; // in radians
-
+const BUFFER = 1;// turret rotation cap // in radians 
 
 function gameScreen() {
     // Rotate and position the gun turrets to point to mouse
@@ -392,7 +391,7 @@ function gameScreen() {
         let turret = gunBody.turret;
 
         let bodyToMouse = getAngle(gunBody.x, gunBody.y, mouseX, mouseY)
-        bodyToMouse = clamp(bodyToMouse, degToRad(-90) - turretRotationBuffer, degToRad(-90) + turretRotationBuffer); // clamp rotation
+        bodyToMouse = clamp(bodyToMouse, degToRad(-90) - BUFFER, degToRad(-90) + BUFFER); // clamp rotation
     
 
         turret.rotation = radToDeg(bodyToMouse) + 90;
@@ -425,7 +424,7 @@ function gameScreen() {
         scene = 'menu';
     }, '#333333', 3)
 
-    if (kb.pressing('space') && frameCount%bulletFireRate == 0 && interwavePause == false) {
+    if (kb.pressing('space') && frameCount%BULLET_FIRE_RATE == 0 && interwavePause == false) {
         spawnBullet(mainGunTurret, false);
     }
 
@@ -434,7 +433,7 @@ function gameScreen() {
 
 
         if (lazerBody.energy > 0) {
-            lazerBody.energy -= lazerDepletionRate;
+            lazerBody.energy -= LAZER_DEPLETION_RATE;
         }
 
         // reduce first then check to eliminate the 'sputtering' when holding down A at low energy
@@ -482,10 +481,10 @@ function gameScreen() {
         spawnBullet(canonTurret, true);
     }
 
-    lazerBody.energy += sidegunRechargeRate;
+    lazerBody.energy += SIDEGUN_RECHARGE_RATE;
     if (lazerBody.energy > 100) { lazerBody.energy = 100; }
 
-    canonBody.energy += sidegunRechargeRate;
+    canonBody.energy += SIDEGUN_RECHARGE_RATE;
     if (canonBody.energy > 100) { canonBody.energy = 100; }
 
 
