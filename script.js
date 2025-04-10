@@ -283,7 +283,7 @@ function menuScreen() {
     textSize(50);
     textAlign(CENTER);
     fill('#FFFFFF');
-    text('Y12 Comp Project', cnv.hw, 180); //alienn r bad simul8r
+    text('Y12 Comp Project', cnv.hw, 180);
     textSize(20);
     text('High Score: ' + highScore, cnv.hw, 240)
 
