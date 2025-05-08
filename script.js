@@ -9,10 +9,11 @@ const BULLET_FIRE_RATE = 10; //frame gap between fires, lower # = more frequent
 
 const SIDEGUN_RECHARGE_RATE = 0.5;
 const LAZER_DEPLETION_RATE = 2;
-
-import { initialise, authenticate, read, write, update } from "./fb_io.mjs"; //import database functions
+/*
+import { initialise, authenticate, read, write, updateVal } from "./fb_io.mjs"; //import database functions
 
 initialise();
+*/
 
 //wave data
 const WAVE_DATA_DICTIONARY = [

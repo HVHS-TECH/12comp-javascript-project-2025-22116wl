@@ -78,7 +78,7 @@ function write(path, data) {
     });
 }
 
-function update(path, data) {
+function updateVal(path, data) {
     const REF = ref(fb_db, path);
 
     update(REF, data).then(() => {
@@ -89,4 +89,4 @@ function update(path, data) {
     });
 }
 
-export { initialise, authenticate, read, write, update };
+export { initialise, authenticate, read, write, updateVal };
