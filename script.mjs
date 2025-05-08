@@ -10,6 +10,10 @@ const BULLET_FIRE_RATE = 10; //frame gap between fires, lower # = more frequent
 const SIDEGUN_RECHARGE_RATE = 0.5;
 const LAZER_DEPLETION_RATE = 2;
 
+import { initialise, authenticate, read, write, update } from "./fb_io.mjs"; //import database functions
+
+initialise();
+
 //wave data
 const WAVE_DATA_DICTIONARY = [
     {aliens:5, alienFrequency: 1, alienBuff: 0.8, bossHealth:0, scoreMult: 0.8}, //introductory easy wave
